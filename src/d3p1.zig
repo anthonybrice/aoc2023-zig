@@ -12,18 +12,18 @@ pub fn main() !void {
     defer lines.deinit();
 
     var sum: i32 = 0;
-    for (lines.items, 0..lines.items.len) |line, rowNum| {
+    for (lines.items, 0..lines.items.len) |line, row_idx| {
         var buffer: [10]u8 = undefined;
         var buf_idx: u32 = 0;
 
-        for (line, 0..line.len) |c, i| {
+        for (line, 0..line.len) |c, col_idx| {
             if (std.ascii.isDigit(c) and buf_idx < buffer.len) {
                 buffer[buf_idx] = c;
                 buf_idx += 1;
             } else if (buf_idx > 0) {
                 const digit_slice = buffer[0..buf_idx];
                 const value = try std.fmt.parseInt(i32, digit_slice, 10);
-                if (isPartNumber(allocator, value, @intCast(i), lines.items, @intCast(rowNum)))
+                if (isPartNumber(allocator, value, @intCast(col_idx), lines.items, @intCast(row_idx)))
                     sum += value;
                 buf_idx = 0;
             }
@@ -32,7 +32,7 @@ pub fn main() !void {
         if (buf_idx > 0) {
             const digit_slice = buffer[0..buf_idx];
             const value = try std.fmt.parseInt(i32, digit_slice, 10);
-            if (isPartNumber(allocator, value, @intCast(line.len), lines.items, @intCast(rowNum)))
+            if (isPartNumber(allocator, value, @intCast(line.len), lines.items, @intCast(row_idx)))
                 sum += value;
             buf_idx = 0;
         }
@@ -75,7 +75,7 @@ fn isPartNumber(allocator: std.mem.Allocator, val: i32, col_idx: i32, lines: [][
     return false;
 }
 
-fn countDigits(n: i32) i32 {
+pub fn countDigits(n: i32) i32 {
     var abs_n = if (n < 0) -n else n;
     if (abs_n == 0) return 1;
 
@@ -87,7 +87,7 @@ fn countDigits(n: i32) i32 {
     return count;
 }
 
-fn parseInto2DArray(allocator: std.mem.Allocator, fileContents: []u8) !std.ArrayList([]u8) {
+pub fn parseInto2DArray(allocator: std.mem.Allocator, fileContents: []u8) !std.ArrayList([]u8) {
     var lines = std.ArrayList([]u8).init(allocator);
 
     var it = std.mem.split(u8, fileContents, "\n");
