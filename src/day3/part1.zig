@@ -1,7 +1,7 @@
 const std = @import("std");
 
-pub fn main() !void {
-    var in = try std.fs.cwd().openFile("in/d3p1", .{ .mode = .read_only });
+pub fn main(input_file: []const u8) !void {
+    var in = try std.fs.cwd().openFile(input_file, .{ .mode = .read_only });
     defer in.close();
 
     var allocator = std.heap.page_allocator;
