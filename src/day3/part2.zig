@@ -5,7 +5,7 @@ pub fn main(input_file: []const u8) !void {
     var in = try std.fs.cwd().openFile(input_file, .{ .mode = .read_only });
     defer in.close();
 
-    var allocator = std.heap.page_allocator;
+    const allocator = std.heap.page_allocator;
     const file_contents = try in.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(file_contents);
 
@@ -17,7 +17,12 @@ pub fn main(input_file: []const u8) !void {
     for (lines.items, 0..lines.items.len) |line, row_idx| {
         for (line, 0..line.len) |c, col_idx| {
             if (c == '*')
-                sum += parseGearNumber(allocator, lines.items, row_idx, col_idx);
+                sum += parseGearNumber(
+                    allocator,
+                    lines.items,
+                    row_idx,
+                    col_idx,
+                );
         }
     }
 
