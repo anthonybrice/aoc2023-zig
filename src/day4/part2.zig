@@ -44,17 +44,23 @@ pub fn main(input_file: []const u8) !void {
     var in = try std.fs.cwd().openFile(input_file, .{ .mode = .read_only });
     defer in.close();
 
-    const allocator = std.heap.page_allocator;
-    var file_contents = try in.readToEndAlloc(allocator, std.math.maxInt(usize));
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer {
+        const deinit_status = gpa.deinit();
+        //fail test; can't try in defer as defer is executed after we return
+        if (deinit_status == .leak) std.debug.print("Memory leak detected\n", .{});
+    }
+    const file_contents = try in.readToEndAlloc(allocator, std.math.maxInt(usize));
     defer allocator.free(file_contents);
 
-    // Strip the final newline if it exists
-    if (file_contents.len > 0 and file_contents[file_contents.len - 1] == '\n') {
-        file_contents = file_contents[0 .. file_contents.len - 1];
-    }
-
     const lines = try util.parseInto2DArray(allocator, file_contents);
-    defer lines.deinit();
+    defer {
+        for (lines.items) |line| {
+            allocator.free(line);
+        }
+        lines.deinit();
+    }
 
     var card_list = std.ArrayList(Card).init(allocator);
     defer {
@@ -64,6 +70,8 @@ pub fn main(input_file: []const u8) !void {
         card_list.deinit();
     }
     for (lines.items) |line| {
+        if (line.len == 0) continue;
+
         var card_tokens = std.mem.tokenizeAny(u8, line, ":|");
         _ = card_tokens.next();
         var win_nums_str = std.mem.tokenizeScalar(u8, card_tokens.next().?, ' ');
